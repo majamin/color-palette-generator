@@ -1,16 +1,32 @@
 #!/bin/sh
 # Creates color palettes based on JSON data
-# DEPS: Sed, ImageMagick
+# Author: majamin <majamin at gmail dot com>
+# License: MIT
 
-curl -LO "https://raw.githubusercontent.com/Jam3/nice-color-palettes/master/1000.json"
+# Dependencies: curl, cat, sed, ImageMagick, bc
+printf "%s\n" "If you receive errors, make sure you have:"
+printf "%s\n" "If you receive errors, make sure you have:"
+printf "\t- %s\n" "curl"
+printf "\t- %s\n" "cat"
+printf "\t- %s\n" "sed"
+printf "\t- %s\n" "ImageMagick"
+printf "\t- %s\n\n" "bc"
 
-# Rounded rectangle mask
-convert -size 1200x720 xc:none -draw "roundrectangle 0,0,1200,720,15,15" mask.png
+# Environment
+colorsdir="generated"
+[[ ! -d $colorsdir ]] && mkdir $colorsdir
 
-# Color JSON file
-json_colors="1000.json"
+font="Helvetica"
+maskimage="mask.png"
 
-# sed 's/\],/\n/g' 1000.json | sed 's/^\[//g' | sed 's/\[\[//g' | sed 's/\]\]//g' > colors.txt
+# Get JSON colors
+curl -LO "https://raw.githubusercontent.com/majamin/nice-color-palettes/master/1000.json"
+
+# Convert JSON to plain text (one color per line)
+sed 's/\],/\n/g' 1000.json | sed 's/\[*//g' | sed 's/\]*//g' | sed 's/"//g' > colors.txt
+
+# Generate rounded rectangle mask
+convert -size 1200x720 xc:none -draw "roundrectangle 0,0,1200,720,15,15" $maskimage
 
 worb() {
 	# Should font color be black or white?
@@ -39,14 +55,13 @@ while read H1 H2 H3 H4 H5; do
 	H3NOHASH=$(printf $H3 | sed 's/#//')
 	H4NOHASH=$(printf $H4 | sed 's/#//')
 	H5NOHASH=$(printf $H5 | sed 's/#//')
-	echo $H1NOHASH  $H2NOHASH  $H3NOHASH  $H4NOHASH  $H5NOHASH
 	convert -size 1200x720 xc:\#ffffff \
 		-draw "fill #$H1 rectangle 0,0 240,720" \
 		-draw "fill #$H2 rectangle 240,0 480,720" \
 		-draw "fill #$H3 rectangle 480,0 720,720" \
 		-draw "fill #$H4 rectangle 720,0 960,720" \
 		-draw "fill #$H5 rectangle 960,0 1200,720" \
-		-font Noto-Sans-Bold \
+		-font $font \
 		-pointsize 30 \
 		-fill $(worb $H1) -annotate +66+680   $H1NOHASH \
 		-fill $(worb $H2) -annotate +306+680  $H2NOHASH \
@@ -56,12 +71,14 @@ while read H1 H2 H3 H4 H5; do
 		$filename
 
 	# rounded corners
-	convert $filename -matte mask.png -compose DstIn -composite $filename
+	if [[ -e "$colorsdir/$filename" ]]; then
+		printf "%s" "File $colorsdir/$filename exists - skipping"
+	else
+		convert $filename -matte $maskimage -compose DstIn -composite "$colorsdir/$filename"
+		printf "Success: %s/%s written!\n" "$colorsdir" "$filename"
+	fi
 
-	# we're done!
-	echo "$filename generated"
+	# remove temporary
+	rm $filename
 
-done <<<$(cat colors.txt | sed 's/#//g')
-
-# 1000.json from:
-# https://github.com/Jam3/nice-color-palettes
+done <<<$(cat colors.txt | sed 's/#//g'| sed 's/,/ /g')
