@@ -11,7 +11,7 @@
 
 # Dependencies: cat, ImageMagick, bc
 cmd_failures=''
-for cmd in jq curl cat ImageMagick bc; do
+for cmd in cat ImageMagick bc; do
   command -v "${cmd}" >/dev/null 2>&1 || cmd_failures="${cmd_failures},${cmd}"
 done
 
