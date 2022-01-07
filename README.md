@@ -1,6 +1,10 @@
 # Generate Color Palettes
 
-A shell script that generates color palettes in PNG format based on JSON file input.
+A shell script that generates color palettes in PNG format.
+Other than the dependencies, this is a turn-key script.
+Instructions on how to download and process the JSON data use is described in `colors.sh`.
+
+The original repo that inspired this script: https://github.com/Jam3/nice-color-palettes
 
 # Instructions
 
@@ -11,11 +15,9 @@ A shell script that generates color palettes in PNG format based on JSON file in
 
 # What it does
 
-1. `colors.sh` downloads 1000.json from my [repo](https://github.com/majamin/nice-color-palettes) (original: https://github.com/Jam3/nice-color-palettes).
-1. Converts the JSON file to a simple plain text file of one palette per line.
-1. Calculates whether a black or white font color should be used depending on color.
 1. Uses ImageMagick to convert each color to a rectangle and combines.
 1. Uses ImageMagick to create a nice "rounded rectangle" image mask.
+1. Calculates whether a black or white font color should be used depending on color.
 1. Writes output to a separate directory.
 
 # Preview
