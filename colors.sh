@@ -3,12 +3,21 @@
 # Author: majamin <majamin at gmail dot com>
 # License: MIT
 
+# You can run this script as-is, but if you want to grab the original data
+# here are the instructions:
+
 # First grab some JSON-formatted data and write 'colors.json'
-#   curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62" "http://www.colourlovers.com/api/palettes/top?format=json&numResults=100&resultOffset=900" | jq . > colors.json
+#	curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
+#	"http://www.colourlovers.com/api/palettes/top?format=json&numResults=100&resultOffset=0" |\
+#	jq . > colors.json
 
 # With the generate 'colors.json' file, turn into plain text:
-#   cat colors{0,1,2,3,4,5,6,7,8,9}.json | jq --raw-output '.[].colors | @tsv' > colors.txt
+#
+#	cat colors{0,1,2,3,4,5,6,7,8,9}.json |\
+#	jq --raw-output '.[].colors |\
+#	@tsv' > colors.txt
 
+#-----------------------------------------------------------------------------
 # Dependencies: cat, ImageMagick, bc
 cmd_failures=''
 for cmd in cat ImageMagick bc; do
@@ -46,7 +55,6 @@ white_or_black() {
 
 while IFS=$'\t' read -r H1 H2 H3 H4 H5; do
 	filename="$H1-$H2-$H3-$H4-$H5.png"
-
 	convert -size 1200x720 xc:\#ffffff \
 		-draw "fill \"#${H1}\" rectangle 0,0 240,720" \
 		-draw "fill \"#${H2}\" rectangle 240,0 480,720" \
@@ -62,11 +70,11 @@ while IFS=$'\t' read -r H1 H2 H3 H4 H5; do
 		-fill "$(white_or_black "$H5")" -annotate +1026+680 "$H5" \
 		temp.png
 
-	# rounded corners
+	# round the corners and write the file
 	if [[ -e "$colorsdir/$filename" ]]; then
 		printf "%s\n" "File $colorsdir/$filename exists - skipping"
 	else
-		convert temp.png -matte $maskimage -compose DstIn -composite "$colorsdir/$filename"
+		convert temp.png -matte $maskimage -compose DstIn -composite "$colorsdir/$filename" &&\
 		printf "Success: %s/%s written!\n" "$colorsdir" "$filename"
 	fi
 
