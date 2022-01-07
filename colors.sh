@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Creates color palettes based on TEXT or JSON data
 # Author: majamin <majamin at gmail dot com>
 # License: MIT
@@ -55,11 +55,11 @@ while IFS=$'\t' read -r H1 H2 H3 H4 H5; do
 		-draw "fill \"#${H5}\" rectangle 960,0 1200,720" \
 		-font $font \
 		-pointsize 30 \
-		-fill $(white_or_black $H1) -annotate +66+680   $H1 \
-		-fill $(white_or_black $H2) -annotate +306+680  $H2 \
-		-fill $(white_or_black $H3) -annotate +546+680  $H3 \
-		-fill $(white_or_black $H4) -annotate +786+680  $H4 \
-		-fill $(white_or_black $H5) -annotate +1026+680 $H5 \
+		-fill "$(white_or_black "$H1")" -annotate +66+680   "$H1" \
+		-fill "$(white_or_black "$H2")" -annotate +306+680  "$H2" \
+		-fill "$(white_or_black "$H3")" -annotate +546+680  "$H3" \
+		-fill "$(white_or_black "$H4")" -annotate +786+680  "$H4" \
+		-fill "$(white_or_black "$H5")" -annotate +1026+680 "$H5" \
 		temp.png
 
 	# rounded corners
