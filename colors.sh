@@ -1,84 +1,75 @@
 #!/bin/sh
-# Creates color palettes based on JSON data
+# Creates color palettes based on TEXT or JSON data
 # Author: majamin <majamin at gmail dot com>
 # License: MIT
 
-# Dependencies: curl, cat, sed, ImageMagick, bc
-printf "%s\n" "If you receive errors, make sure you have:"
-printf "%s\n" "If you receive errors, make sure you have:"
-printf "\t- %s\n" "curl"
-printf "\t- %s\n" "cat"
-printf "\t- %s\n" "sed"
-printf "\t- %s\n" "ImageMagick"
-printf "\t- %s\n\n" "bc"
+# First grab some JSON-formatted data and write 'colors.json'
+#   curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62" "http://www.colourlovers.com/api/palettes/top?format=json&numResults=100&resultOffset=900" | jq . > colors.json
+
+# With the generate 'colors.json' file, turn into plain text:
+#   cat colors{0,1,2,3,4,5,6,7,8,9}.json | jq --raw-output '.[].colors | @tsv' > colors.txt
+
+# Dependencies: jq, curl, cat, sed, ImageMagick, bc
+cmd_failures=''
+for cmd in jq curl cat sed ImageMagick bc; do
+  command -v "${cmd}" >/dev/null 2>&1 || cmd_failures="${cmd_failures},${cmd}"
+done
 
 # Environment
-colorsdir="generated"
-[[ ! -d $colorsdir ]] && mkdir $colorsdir
-
-font="Helvetica"
+colorsfile="colors.txt"
+colorsdir="generated" && [[ ! -d $colorsdir ]] && mkdir $colorsdir
+font="Noto-Sans-Mono-Bold"
 maskimage="mask.png"
 
-# Get JSON colors
-curl -LO "https://raw.githubusercontent.com/majamin/nice-color-palettes/master/1000.json"
-
-# Convert JSON to plain text (one color per line)
-sed 's/\],/\n/g' 1000.json | sed 's/\[*//g' | sed 's/\]*//g' | sed 's/"//g' > colors.txt
-
-# Generate rounded rectangle mask
+# Generate rounded-corner rectangle mask
 convert -size 1200x720 xc:none -draw "roundrectangle 0,0,1200,720,15,15" $maskimage
 
-worb() {
-	# Should font color be black or white?
-	# https://stackoverflow.com/a/7253786/10059841
+# should the font be white or black?
+white_or_black() {
 	# HEX to RGB
-	hexinput=$(echo $1 | sed 's/#//' | tr '[:lower:]' '[:upper:]')
+	# https://stackoverflow.com/a/7253786/10059841
+	hex="$1"
+	r=$(echo "ibase=16; ${hex:0:2}/FF" | bc -l)
+	g=$(echo "ibase=16; ${hex:2:2}/FF" | bc -l)
+	b=$(echo "ibase=16; ${hex:4:2}/FF" | bc -l)
 
-	x=`echo $hexinput | cut -c-2`
-	y=`echo $hexinput | cut -c3-4`
-	z=`echo $hexinput | cut -c5-6`
+	# Calculate luminance (in a rough way)
+	# https://gamedev.stackexchange.com/a/38561
+	L=$(echo "0.2126*$r + 0.7152*$g + 0.0722*$b" | bc -l)
 
-	r=$(echo "ibase=16; $x" | bc)
-	g=$(echo "ibase=16; $y" | bc)
-	b=$(echo "ibase=16; $z" | bc)
+	threshold=0.5  # values from 0 to 1
+	# use_black is 1 if true, 0 otherwise
+	use_black=$(echo "$L > $threshold" | bc -l)
 
-	L=$(echo "$r*0.299 + $g*0.587 + $b*0.114 > 186" | bc)
-
-	[[ $L -eq 1 ]] && echo "black" || echo "white"
-
+	[[ $use_black -eq 1 ]] && echo "black" || echo "white"
 }
 
-while read H1 H2 H3 H4 H5; do
-	filename="$(echo $H1-$H2-$H3-$H4-$H5 | sed 's/#//g')".png
-	H1NOHASH=$(printf $H1 | sed 's/#//')
-	H2NOHASH=$(printf $H2 | sed 's/#//')
-	H3NOHASH=$(printf $H3 | sed 's/#//')
-	H4NOHASH=$(printf $H4 | sed 's/#//')
-	H5NOHASH=$(printf $H5 | sed 's/#//')
+while IFS=$'\t' read -r H1 H2 H3 H4 H5; do
+	filename="$H1-$H2-$H3-$H4-$H5.png"
+
 	convert -size 1200x720 xc:\#ffffff \
-		-draw "fill #$H1 rectangle 0,0 240,720" \
-		-draw "fill #$H2 rectangle 240,0 480,720" \
-		-draw "fill #$H3 rectangle 480,0 720,720" \
-		-draw "fill #$H4 rectangle 720,0 960,720" \
-		-draw "fill #$H5 rectangle 960,0 1200,720" \
+		-draw "fill \"#${H1}\" rectangle 0,0 240,720" \
+		-draw "fill \"#${H2}\" rectangle 240,0 480,720" \
+		-draw "fill \"#${H3}\" rectangle 480,0 720,720" \
+		-draw "fill \"#${H4}\" rectangle 720,0 960,720" \
+		-draw "fill \"#${H5}\" rectangle 960,0 1200,720" \
 		-font $font \
 		-pointsize 30 \
-		-fill $(worb $H1) -annotate +66+680   $H1NOHASH \
-		-fill $(worb $H2) -annotate +306+680  $H2NOHASH \
-		-fill $(worb $H3) -annotate +546+680  $H3NOHASH \
-		-fill $(worb $H4) -annotate +786+680  $H4NOHASH \
-		-fill $(worb $H5) -annotate +1026+680 $H5NOHASH \
-		$filename
+		-fill $(white_or_black $H1) -annotate +66+680   $H1 \
+		-fill $(white_or_black $H2) -annotate +306+680  $H2 \
+		-fill $(white_or_black $H3) -annotate +546+680  $H3 \
+		-fill $(white_or_black $H4) -annotate +786+680  $H4 \
+		-fill $(white_or_black $H5) -annotate +1026+680 $H5 \
+		temp.png
 
 	# rounded corners
 	if [[ -e "$colorsdir/$filename" ]]; then
-		printf "%s" "File $colorsdir/$filename exists - skipping"
+		printf "%s\n" "File $colorsdir/$filename exists - skipping"
 	else
-		convert $filename -matte $maskimage -compose DstIn -composite "$colorsdir/$filename"
+		convert temp.png -matte $maskimage -compose DstIn -composite "$colorsdir/$filename"
 		printf "Success: %s/%s written!\n" "$colorsdir" "$filename"
 	fi
 
-	# remove temporary
-	rm $filename
+done <<< "$(cat $colorsfile)"
 
-done <<<$(cat colors.txt | sed 's/#//g'| sed 's/,/ /g')
+rm temp.png
