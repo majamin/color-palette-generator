@@ -9,9 +9,9 @@
 # With the generate 'colors.json' file, turn into plain text:
 #   cat colors{0,1,2,3,4,5,6,7,8,9}.json | jq --raw-output '.[].colors | @tsv' > colors.txt
 
-# Dependencies: jq, curl, cat, sed, ImageMagick, bc
+# Dependencies: cat, ImageMagick, bc
 cmd_failures=''
-for cmd in jq curl cat sed ImageMagick bc; do
+for cmd in jq curl cat ImageMagick bc; do
   command -v "${cmd}" >/dev/null 2>&1 || cmd_failures="${cmd_failures},${cmd}"
 done
 

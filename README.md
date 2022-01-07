@@ -8,6 +8,8 @@ The original repo that inspired this script: https://github.com/Jam3/nice-color-
 
 # Instructions
 
+You'll need `cat` (present on most systems), `ImageMagick`, and `bc`. Optionally, `curl` and `jq`.
+
 1. `git clone https://github.com/majamin/color-palette-generator`
 1. `cd color-palette-generator`
 1. `chmod +x colors.sh`
