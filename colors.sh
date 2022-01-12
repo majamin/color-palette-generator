@@ -24,6 +24,11 @@ for cmd in cat ImageMagick bc; do
   command -v "${cmd}" >/dev/null 2>&1 || cmd_failures="${cmd_failures},${cmd}"
 done
 
+if (( "${#cmd_failures}" > 0 )); then
+  printf -- '%s\n' "The following dependencies are missing: ${cmd_failures/,/}" >&2
+  exit 1
+fi
+
 # Environment
 colorsfile="colors.txt"
 colorsdir="generated" && [[ ! -d $colorsdir ]] && mkdir $colorsdir
