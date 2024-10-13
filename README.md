@@ -43,10 +43,10 @@ PRs are welcome.
 
 (2024-10-13)
 
-- Adding rows of swatches and text for easier comparison
-- Handle file input, add messages.
-- Added JetBrainsMono for convenience.
-- Fixed _ImageMagick_ dependency for the actual binary (magick)
-- Replaced _convert_ with _magick_
-- Removed invalid colors from colors.txt
-- Consistent variable case in colors.sh
+- adding rows of swatches and text for easier comparison
+- handle file input, add messages.
+- added jetbrainsmono for convenience.
+- fixed _imagemagick_ dependency for the actual binary (magick)
+- replaced _convert_ with _magick_
+- removed invalid colors from colors.txt
+- consistent variable case in colors.sh
