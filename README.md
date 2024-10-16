@@ -1,8 +1,10 @@
 # Generate Color Palettes
 
-A shell script that generates color palettes in PNG format.
-Other than the dependencies, this is a turn-key script.
-Instructions on how to download and process the JSON data use is described in `colors.sh`.
+A shell script that generates color palettes in PNG format. This script does
+not generate the palettes themselves - it only aids in visualizing
+predetermined colorschemes by input from a file (see colors.txt) or from stdin.
+
+An example of how to get colors in the appropriate format is given in the script.
 
 [This](https://github.com/Jam3/nice-color-palettes) is original repo that inspired this script.
 

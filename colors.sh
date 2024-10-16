@@ -1,23 +1,25 @@
 #!/bin/bash
-# Creates color palettes based on TEXT or JSON data
+# ---- color palette generator ----
+# Creates color palette images based on input from
+# a file or stdin.
+
 # Author: Marian Minar <majamin at gmail dot com>
 # License: MIT
 
-# Usage: ./colors.sh <COLFILE>
-# See colors.txt for an example of <COLFILE>.
+# Usage: ./colors.sh [ <pathtofile> | stdin ]
+# See colors.txt for an example of file input
 
-# You can run this script as-is, but if you want to grab the original data
-# here are the instructions:
+# This script generates images where one can compare the
+# the suitability of certain color combinations. It does
+# not generate the color schemes themselves. A possible
+# oneliner that can grab a set of colorschemes is provided
+# below. Adjust the resultOffset values to grab a
+# different set.
 
-# First grab some JSON-formatted data and write 'colors.json'
-# curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
-#   "http://www.colourlovers.com/api/palettes/top?format=json&numResults=100&resultOffset=0" |
-#   jq . >colors.json
-
-# With the generate 'colors.json' file, turn into plain text:
-#
-# cat colors{0,1,2,3,4,5,6,7,8,9}.json |
-#   jq --raw-output '.[].colors |\ @tsv' >colors.txt
+# curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \                                                                                0s  (git)-[master]
+#   "https://www.colourlovers.com/api/palettes/top?format=json&amp;numResults=20&amp;resultOffset=0" |
+#   jq -r ".[].colors | @tsv" \
+#   ./colors.sh
 
 #-----------------------------------------------------------------------------
 # Dependencies: cat, magick, bc
@@ -33,7 +35,6 @@ fi
 
 #-----------------------------------------------------------------------------
 # Vars
-COLFILE="$1"
 FONTFILE="JetBrainsMonoNL-ExtraBold.ttf"
 MASKFILE="mask.png"
 TEMPFILE="temp.png"
@@ -73,11 +74,6 @@ die() {
 
 #-----------------------------------------------------------------------------
 
-# Check if $1 is a file
-[[ ! -f "$COLFILE" ]] &&
-  usage &&
-  die "Colors file not provided. See colors.txt for an example."
-
 # Make the out dir
 [[ ! -d "$OUTDIR" ]] && mkdir -p "$OUTDIR" 2>/dev/null
 
@@ -99,7 +95,7 @@ ROW5="+470"
 # color of the next rectangle in the row.
 # Also, colorize the hex values with the same color
 # and draw each combination in a row
-while IFS=$'\t' read -r H1 H2 H3 H4 H5; do
+while read -r H1 H2 H3 H4 H5; do
   FILEOUT="$H1-$H2-$H3-$H4-$H5.png"
   magick -size 1200x720 xc:\#ffffff \
     -draw "fill \"#${H1}\" rectangle 0,0 240,720" \
@@ -178,6 +174,6 @@ while IFS=$'\t' read -r H1 H2 H3 H4 H5; do
     magick "$TEMPFILE" -alpha Set "$MASKFILE" -compose DstIn -composite "$OUTDIR/$FILEOUT" &&
       printf "Success: %s/%s written\n" "$OUTDIR" "$FILEOUT"
   fi
-done <<<"$(cat "$COLFILE")"
+done <"${1:-/dev/stdin}"
 
 rm "$TEMPFILE"
